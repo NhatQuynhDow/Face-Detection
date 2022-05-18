@@ -89,4 +89,20 @@ history = model.fit(x_train, y_train, epochs = 200, batch_size = 64, validation_
 # ACCURACY OF MODEL
 score = model.evaluate(x_test,y_test,verbose = 1)
 
+# PREDICT AND TEST
+classes = ['Me','Not Me']
 
+from keras.preprocessing.image import load_img
+from keras.preprocessing.image import img_to_array
+from keras.preprocessing.image import array_to_img
+
+filename = 'Q.jpg'
+
+img = load_img(filename, target_size =(150,150))
+plt.imshow(img)
+img = img_to_array(img)
+img = color.rgb2gray(img)
+img = img.reshape(1,22500)
+
+label = int(np.argmax(model.predict(img), axis = 1))
+classes[label]
