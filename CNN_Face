@@ -1,1 +1,92 @@
+# IMPORT LIBRARY
+import os
+import numpy as np
+from matplotlib import pyplot as plt
+from skimage.io import imread,imshow
+from skimage.transform import resize
+import random
+from skimage import color
+from tensorflow.keras.utils import to_categorical
+from keras.models import Sequential
+from keras.layers import Dense, Activation, Dropout
+from tensorflow.keras.optimizers import RMSprop
+from sklearn.model_selection import train_test_split
+
+#LOAD DATA
+datadir = '/content/drive/MyDrive/AI/dow'
+folder = ['Quynh','Luan']
+
+for file in folder:
+  path = os.path.join(datadir,file)
+  for picture in os.listdir(path):
+    image = imread(os.path.join(path,picture))
+    img = resize(image,(150,150))
+    plt.imshow(img)
+    plt.show()
+    break
+    break
+# CREATE FUNCTION TO LOAD DATA    
+train_data = []
+def fnc_train_data():
+  for file in folder:
+    path = os.path.join(datadir,file)
+    classname = folder.index(file)
+    for picture in os.listdir(path):
+      image = imread(os.path.join(path,picture))
+      img = resize(image,(150,150))
+      train_data.append([img,classname])  
+
+fnc_train_data()    
+
+# SPLIT DATA TO TRAIN AND TEST
+X = []
+y = []
+
+for features, label in train_data:
+  X.append(features)
+  y.append(label)
+
+X = np.array(X)
+y = np.array(y)  
+x_train, x_test, y_train, y_test = train_test_split(X, y, test_size = 0.3)
+
+
+x_train = x_train.astype('float32')
+x_test = x_test.astype('float32')
+x_train/= 255.0 
+x_test/= 255.0
+
+y_train = to_categorical(y_train) 
+y_test = to_categorical(y_test)
+
+# CREATE MODEL CNN
+model = Sequential()
+# BLOCK 1
+model.add(Conv2D(32,(3,3), activation='relu',kernel_initializer = 'he_uniform', padding ='same' ,input_shape =(150,150,3)))
+model.add(Conv2D(32,(3,3), activation='relu',kernel_initializer = 'he_uniform', padding ='same'))
+model.add(MaxPooling2D(2,2))
+
+# BLOCK 2
+model.add(Conv2D(64,(3,3), activation='relu',kernel_initializer = 'he_uniform', padding ='same'))
+model.add(Conv2D(64,(3,3), activation='relu',kernel_initializer = 'he_uniform', padding ='same'))
+model.add(MaxPooling2D(2,2))
+
+# BLOCK 2
+model.add(Conv2D(64,(3,3), activation='relu',kernel_initializer = 'he_uniform', padding ='same'))
+model.add(Conv2D(64,(3,3), activation='relu',kernel_initializer = 'he_uniform', padding ='same'))
+model.add(MaxPooling2D(2,2))
+
+# Add ANN
+model.add(Flatten())
+model.add(Dense(128,activation = 'relu', kernel_initializer = 'he_uniform'))
+model.add(Dense(2,activation = 'softmax'))
+opt = SGD(lr= 0.01, momentum = 0.9)
+
+model.compile(loss = 'categorical_crossentropy', optimizer = opt, metrics = ['accuracy'])
+
+history = model.fit(x_train, y_train, epochs = 200, batch_size = 64, validation_data = (x_test,y_test), verbose = 1)
+
+# ACCURACY OF MODEL
+score = model.evaluate(x_test,y_test,verbose = 1)
+
 
