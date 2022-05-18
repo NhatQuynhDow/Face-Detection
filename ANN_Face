@@ -1,0 +1,93 @@
+# IMPORT LIBRARY
+import os
+import numpy as np
+from matplotlib import pyplot as plt
+from skimage.io import imread,imshow
+from skimage.transform import resize
+import random
+from skimage import color
+from tensorflow.keras.utils import to_categorical
+from keras.models import Sequential
+from keras.layers import Dense, Activation, Dropout
+from tensorflow.keras.optimizers import RMSprop
+from sklearn.model_selection import train_test_split
+
+#LOAD DATA
+datadir = '/content/drive/MyDrive/AI/dow'
+folder = ['Quynh','Luan']
+
+for file in folder:
+  path = os.path.join(datadir,file)
+  for picture in os.listdir(path):
+    image = imread(os.path.join(path,picture))
+    img = resize(image,(150,150))
+    plt.imshow(img)
+    plt.show()
+    break
+    break
+# CREATE FUNCTION TO LOAD DATA    
+train_data = []
+def fnc_train_data():
+  for file in folder:
+    path = os.path.join(datadir,file)
+    classname = folder.index(file)
+    for picture in os.listdir(path):
+      image = imread(os.path.join(path,picture))
+      img = resize(image,(150,150))
+      train_data.append([img,classname])  
+
+fnc_train_data()    
+
+# SPLIT DATA TO TRAIN AND TEST
+X = []
+y = []
+
+for features, label in train_data:
+  X.append(features)
+  y.append(label)
+
+X = np.array(X)
+y = np.array(y)  
+x_train, x_test, y_train, y_test = train_test_split(X, y, test_size = 0.3)
+
+x_test = x_test.reshape(23,22500)
+x_train = x_train.reshape(52,22500) 
+
+x_train = x_train.astype('float32')
+x_test = x_test.astype('float32')
+x_train/= 255.0 
+x_test/= 255.0
+
+y_train = to_categorical(y_train) 
+y_test = to_categorical(y_test)
+
+# Model ANN
+model = Sequential()
+model.add(Dense(512, activation ='relu', input_shape = (22500,)))
+model.add(Dropout(0.2))
+model.add(Dense(512, activation = 'relu'))
+model.add(Dropout(0.2))
+model.add(Dense(2, activation = 'softmax')) # => Output
+model.add(Dropout(0.2))
+
+model.summary()
+model.compile( loss='binary_crossentropy', optimizer = RMSprop(), metrics = ['accuracy']) 
+history = model.fit(x_train, y_train, batch_size = 64, epochs = 300, verbose = 1, validation_data = (x_test, y_test))
+
+# PREDICT AND TEST
+classes = ['Me','Not Me']
+
+from keras.preprocessing.image import load_img
+from keras.preprocessing.image import img_to_array
+from keras.preprocessing.image import array_to_img
+
+filename = 'Q.jpg'
+
+img = load_img(filename, target_size =(150,150))
+plt.imshow(img)
+img = img_to_array(img)
+img = color.rgb2gray(img)
+img = img.reshape(1,22500)
+
+label = int(np.argmax(model.predict(img), axis = 1))
+classes[label]
